@@ -3,9 +3,43 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getPrices, getProviders, getExcelDownloadUrl, deletePrice } from '../api/client'
 import { Download, Search, FilterX, Trash2 } from 'lucide-react'
 
+function ConfirmModal({ onConfirm, onCancel }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onCancel} />
+      <div className="relative bg-white rounded-2xl shadow-xl p-6 w-80 mx-4">
+        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 mx-auto mb-4">
+          <Trash2 size={22} className="text-red-500" />
+        </div>
+        <h3 className="text-center text-gray-900 font-semibold text-base mb-1">
+          Eliminar precio
+        </h3>
+        <p className="text-center text-gray-500 text-sm mb-6">
+          ¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer.
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={onCancel}
+            className="flex-1 px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 px-4 py-2 rounded-lg bg-red-500 text-white text-sm font-medium hover:bg-red-600 transition-colors"
+          >
+            Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Prices() {
   const [filters, setFilters] = useState({ medication: '', provider_id: '' })
   const [deletingId, setDeletingId] = useState(null)
+  const [confirmId, setConfirmId] = useState(null)
   const queryClient = useQueryClient()
 
   const { data: providers = [] } = useQuery({
@@ -31,10 +65,13 @@ export default function Prices() {
   })
 
   const handleDelete = (id) => {
-    if (window.confirm('¿Eliminar este registro de precio?')) {
-      setDeletingId(id)
-      deleteMutation.mutate(id)
-    }
+    setConfirmId(id)
+  }
+
+  const confirmDelete = () => {
+    setDeletingId(confirmId)
+    deleteMutation.mutate(confirmId)
+    setConfirmId(null)
   }
 
   // Calcular IDs con el precio más bajo por medicamento (solo cuando hay 2+ proveedores)
@@ -59,6 +96,12 @@ export default function Prices() {
 
   return (
     <div className="p-8">
+      {confirmId !== null && (
+        <ConfirmModal
+          onConfirm={confirmDelete}
+          onCancel={() => setConfirmId(null)}
+        />
+      )}
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Precios</h1>

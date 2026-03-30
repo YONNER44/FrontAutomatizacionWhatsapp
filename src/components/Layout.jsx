@@ -1,5 +1,5 @@
 import { Outlet, NavLink } from 'react-router-dom'
-import { LayoutDashboard, Users, TrendingUp, QrCode } from 'lucide-react'
+import { LayoutDashboard, Users, TrendingUp, QrCode, Settings } from 'lucide-react'
 import logo from '../assets/Gemini_Generated_Image_1cvtzv1cvtzv1cvt.png'
 
 const navItems = [
@@ -7,6 +7,7 @@ const navItems = [
   { to: '/providers', icon: Users, label: 'Proveedores' },
   { to: '/prices', icon: TrendingUp, label: 'Precios' },
   { to: '/whatsapp', icon: QrCode, label: 'WhatsApp QR' },
+  { to: '/settings', icon: Settings, label: 'Configuración' },
 ]
 
 export default function Layout() {
