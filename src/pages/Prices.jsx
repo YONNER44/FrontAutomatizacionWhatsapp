@@ -74,7 +74,6 @@ export default function Prices() {
     setConfirmId(null)
   }
 
-  // Calcular IDs con el precio más bajo por medicamento (solo cuando hay 2+ proveedores)
   const bestPriceIds = useMemo(() => {
     const groups = {}
     prices.forEach(p => {
@@ -95,17 +94,18 @@ export default function Prices() {
   const hasFilters = filters.medication || filters.provider_id
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       {confirmId !== null && (
         <ConfirmModal
           onConfirm={confirmDelete}
           onCancel={() => setConfirmId(null)}
         />
       )}
-      <div className="flex items-center justify-between mb-8">
+
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6 md:mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Precios</h1>
-          <p className="text-gray-500 mt-1">
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900">Precios</h1>
+          <p className="text-gray-500 mt-1 text-sm">
             Precios de medicamentos reportados por proveedores
           </p>
         </div>
@@ -113,7 +113,7 @@ export default function Prices() {
           href={getExcelDownloadUrl()}
           target="_blank"
           rel="noreferrer"
-          className="flex items-center gap-2 bg-green-600 text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
+          className="flex items-center gap-2 bg-green-600 text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors self-start sm:self-auto shrink-0"
         >
           <Download size={16} />
           Descargar Excel
@@ -121,8 +121,8 @@ export default function Prices() {
       </div>
 
       {/* Filtros */}
-      <div className="bg-white rounded-2xl border border-gray-200 p-4 mb-4 flex gap-3 flex-wrap items-center">
-        <div className="relative flex-1 min-w-48">
+      <div className="bg-white rounded-2xl border border-gray-200 p-3 md:p-4 mb-4 flex flex-col sm:flex-row gap-3 flex-wrap items-stretch sm:items-center">
+        <div className="relative flex-1 min-w-0">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             className="w-full border border-gray-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -132,7 +132,7 @@ export default function Prices() {
           />
         </div>
         <select
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white min-w-48"
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
           value={filters.provider_id}
           onChange={e => setFilters(f => ({ ...f, provider_id: e.target.value }))}
         >
@@ -141,18 +141,20 @@ export default function Prices() {
             <option key={p.id} value={p.id}>{p.name}</option>
           ))}
         </select>
-        {hasFilters && (
-          <button
-            onClick={clearFilters}
-            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
-          >
-            <FilterX size={15} />
-            Limpiar
-          </button>
-        )}
-        <span className="text-xs text-gray-400 ml-auto">
-          {isLoading ? 'Cargando...' : `${prices.length} registros`}
-        </span>
+        <div className="flex items-center gap-2">
+          {hasFilters && (
+            <button
+              onClick={clearFilters}
+              className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <FilterX size={15} />
+              Limpiar
+            </button>
+          )}
+          <span className="text-xs text-gray-400 ml-auto">
+            {isLoading ? 'Cargando...' : `${prices.length} registros`}
+          </span>
+        </div>
       </div>
 
       {/* Tabla */}
@@ -173,12 +175,12 @@ export default function Prices() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Medicamento</th>
-                  <th className="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Unidad</th>
-                  <th className="text-right px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Precio</th>
-                  <th className="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Proveedor</th>
-                  <th className="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Fecha</th>
-                  <th className="px-6 py-3.5"></th>
+                  <th className="text-left px-4 md:px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Medicamento</th>
+                  <th className="text-left px-4 md:px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Unidad</th>
+                  <th className="text-right px-4 md:px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Precio</th>
+                  <th className="text-left px-4 md:px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">Proveedor</th>
+                  <th className="text-left px-4 md:px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Fecha</th>
+                  <th className="px-4 md:px-6 py-3.5"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -186,20 +188,25 @@ export default function Prices() {
                   const isBest = bestPriceIds.has(price.id)
                   return (
                   <tr key={price.id} className={`transition-colors ${isBest ? 'bg-green-50 hover:bg-green-100' : 'hover:bg-gray-50'}`}>
-                    <td className={`px-6 py-3.5 font-medium ${isBest ? 'text-green-800' : 'text-gray-900'}`}>{price.medication_name}</td>
-                    <td className="px-6 py-3.5 text-gray-500">{price.unit || '—'}</td>
-                    <td className={`px-6 py-3.5 text-right font-mono font-semibold ${isBest ? 'text-green-700' : 'text-gray-900'}`}>
+                    <td className={`px-4 md:px-6 py-3.5 font-medium ${isBest ? 'text-green-800' : 'text-gray-900'}`}>
+                      <span>{price.medication_name}</span>
+                      <span className="block text-xs text-gray-400 sm:hidden mt-0.5">
+                        {price.provider_name || `#${price.provider_id}`}
+                      </span>
+                    </td>
+                    <td className="px-4 md:px-6 py-3.5 text-gray-500 hidden md:table-cell">{price.unit || '—'}</td>
+                    <td className={`px-4 md:px-6 py-3.5 text-right font-mono font-semibold ${isBest ? 'text-green-700' : 'text-gray-900'}`}>
                       ${price.price.toLocaleString('es-CO')}
                     </td>
-                    <td className="px-6 py-3.5">
+                    <td className="px-4 md:px-6 py-3.5 hidden sm:table-cell">
                       <span className="bg-blue-50 text-blue-700 text-xs px-2.5 py-1 rounded-full font-medium">
                         {price.provider_name || `#${price.provider_id}`}
                       </span>
                     </td>
-                    <td className="px-6 py-3.5 text-gray-500 text-xs">
+                    <td className="px-4 md:px-6 py-3.5 text-gray-500 text-xs hidden lg:table-cell">
                       {new Date(price.date_reported + 'T00:00:00').toLocaleDateString('es-CO')}
                     </td>
-                    <td className="px-6 py-3.5 text-right">
+                    <td className="px-4 md:px-6 py-3.5 text-right">
                       <button
                         onClick={() => handleDelete(price.id)}
                         disabled={deletingId === price.id}

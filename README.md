@@ -4,13 +4,18 @@ Panel de administración web para el sistema de recolección automática de prec
 
 ## Tecnologías
 
-- **React 18** + **Vite 6**
-- **React Router v7** – enrutamiento SPA
-- **TanStack Query v5** – caché y sincronización de datos con el backend
-- **Axios** – cliente HTTP
-- **Tailwind CSS 3** – estilos utilitarios
-- **Lucide React** – iconografía
-- **react-qr-code** – generación de código QR para WhatsApp Web
+| Tecnología | Versión | Rol |
+|-----------|---------|-----|
+| React | 18.3.1 | Framework UI |
+| Vite | 6.1.0 | Build tool + dev server |
+| React Router | 7.1.5 | Enrutamiento SPA |
+| TanStack Query | 5.65.1 | Caché y sincronización con el backend |
+| Axios | 1.7.9 | Cliente HTTP |
+| Tailwind CSS | 3.4.17 | Estilos utilitarios |
+| Lucide React | 0.475.0 | Iconografía |
+| react-qr-code | 2.0.18 | Generación del código QR de WhatsApp |
+| react-hot-toast | 2.4.1 | Notificaciones |
+| Nginx | — | Servidor de producción (dentro del contenedor Docker) |
 
 ## Estructura del proyecto
 
@@ -18,15 +23,17 @@ Panel de administración web para el sistema de recolección automática de prec
 src/
 ├── api/
 │   └── client.js          # Funciones Axios para cada endpoint del backend
+├── assets/
+│   └── *.png              # Imágenes y logo de la aplicación
 ├── components/
-│   ├── Layout.jsx          # Wrapper con barra lateral de navegación
-│   ├── Modal.jsx           # Modal reutilizable
-│   └── StatCard.jsx        # Tarjeta de estadística del dashboard
+│   ├── Layout.jsx          # Sidebar de navegación + outlet de contenido
+│   ├── Modal.jsx           # Modal reutilizable (confirmaciones, alertas)
+│   └── StatCard.jsx        # Tarjeta de métrica para el Dashboard
 └── pages/
-    ├── Dashboard.jsx       # Vista principal con métricas y botones de inicialización
-    ├── Providers.jsx       # CRUD de proveedores (distribuidoras farmacéuticas)
-    ├── Prices.jsx          # Consulta de precios con filtros y descarga de Excel
-    ├── WhatsAppQR.jsx      # Código QR para vincular WhatsApp Web
+    ├── Dashboard.jsx       # Métricas, proveedores y botones de inicialización
+    ├── Providers.jsx       # CRUD de proveedores (distribuidoras)
+    ├── Prices.jsx          # Consulta de precios con filtros y descarga Excel
+    ├── WhatsAppQR.jsx      # QR para vincular WhatsApp Web
     └── Settings.jsx        # Configuración de credenciales de Google Sheets
 ```
 
@@ -34,21 +41,19 @@ src/
 
 - Node.js 18+
 - Backend corriendo en `http://localhost:8000`
-- Servicio Node.js WhatsApp corriendo en `http://localhost:3000`
+- Servicio WhatsApp Node.js corriendo en `http://localhost:3000`
 
-## Instalación
+## Instalación y uso (desarrollo)
 
 ```bash
+# Instalar dependencias
 npm install
-```
 
-## Correr el frontend
-
-```bash
+# Levantar dev server (con hot reload)
 npm run dev
 ```
 
-La app queda disponible en: http://localhost:5173
+App disponible en: `http://localhost:5173`
 
 ```bash
 # Compilar para producción
@@ -58,83 +63,95 @@ npm run build
 npm run preview
 ```
 
-## Despliegue con Docker
+## Despliegue con Docker (producción)
 
-El frontend se sirve mediante nginx dentro de un contenedor Docker. El build de producción se genera en la etapa de build y se copia a nginx:
+El frontend se sirve mediante nginx dentro de un contenedor Docker. El build de producción se genera en la etapa de build de la imagen y se copia a nginx:
 
 ```bash
 # Desde la raíz del proyecto
 docker compose up --build -d frontend
 ```
 
-Queda disponible en: http://localhost:5173
+Disponible en: `http://localhost:80`
+
+## Rutas de la aplicación
+
+| Ruta | Componente | Descripción |
+|------|-----------|-------------|
+| `/` | — | Redirige a `/dashboard` |
+| `/dashboard` | `Dashboard.jsx` | Panel principal con métricas y botones de acción |
+| `/providers` | `Providers.jsx` | CRUD de proveedores (distribuidoras farmacéuticas) |
+| `/prices` | `Prices.jsx` | Consulta de precios recolectados |
+| `/whatsapp` | `WhatsAppQR.jsx` | Código QR para vincular WhatsApp Web |
+| `/settings` | `Settings.jsx` | Configuración de Google Sheets |
 
 ## Páginas
 
 ### Dashboard (`/dashboard`)
 
 Muestra cuatro tarjetas de métricas:
-- **Proveedores activos** – cantidad de distribuidoras con estado activo
-- **Medicamentos** – total de medicamentos únicos registrados en la BD
-- **Registros de precios** – total de entradas acumuladas en la base de datos
-- **Excel generado** – si el archivo Excel local tiene datos y cuántos proveedores incluye
+- **Proveedores activos** — distribuidoras con estado activo
+- **Medicamentos** — total de medicamentos únicos registrados
+- **Registros de precios** — total de entradas acumuladas en la base de datos
+- **Excel generado** — si el archivo Excel local tiene datos
 
-Incluye también:
-- Lista de todos los proveedores registrados con su estado (activo/inactivo)
-- Dos botones de acción en la esquina superior derecha:
+Lista de todos los proveedores registrados con su estado (activo/inactivo).
 
-**Botón "Inicializar día"** (verde)
-Llama a `POST /prices/init-day`. Inserta en Google Sheets y en el Excel local un bloque de encabezado visual para el día actual (nombres de proveedores + columnas Fecha/Medicamento/Precio/Cantidad, en azul) debajo de los datos existentes. El administrador agrega luego los medicamentos manualmente en la hoja. Si el encabezado del día ya existe, muestra advertencia y no duplica.
+**Botón "Inicializar día"** (verde) → `POST /prices/init-day`
+- **Primera vez del mes** (hoja vacía): crea la estructura completa de la hoja — fila 1 con nombres de los proveedores activos (fondo azul, celdas combinadas) y fila 2 con columnas Fecha/Medicamento/Precio/Cantidad (fondo azul).
+- **Días posteriores**: inserta una fila vacía de separación + bloque de encabezados azules debajo de los datos existentes.
+- Si el encabezado del día ya existe, muestra advertencia y no duplica.
 
-**Botón "Inicializar [mes]"** (azul)
-Llama a `POST /prices/init-month`. Crea la hoja del mes actual en Google Sheets y en el Excel local con el formato de proveedores activos, pero sin medicamentos. Si la hoja ya existe, muestra advertencia y no modifica los datos.
+**Botón "Inicializar [mes]"** (azul) → `POST /prices/init-month`
+- Crea la pestaña `YYYY-MM` como hoja vacía (sin formato) en Google Sheets y en el Excel local.
+- Si la hoja ya existe, muestra advertencia sin modificar los datos.
 
-Ambos botones muestran el resultado inline bajo el encabezado:
-- Verde → creado correctamente
-- Amarillo → ya existía, sin cambios
-- Rojo → error
+Ambos botones muestran el resultado inline:
+- **Verde** → creado correctamente
+- **Amarillo** → ya existía, sin cambios
+- **Rojo** → error con detalle del mensaje
 
 ### Proveedores (`/providers`)
 
 Gestión completa de las distribuidoras farmacéuticas:
-- Ver tabla con nombre, número de WhatsApp y estado
-- **Agregar** proveedor con nombre y número en formato internacional (Ej: `573001234567`)
-- **Editar** nombre y número de un proveedor existente
-- **Activar / desactivar** sin eliminar el historial
-- **Eliminar** proveedor
+- Tabla con nombre, número de WhatsApp y estado
+- **Agregar** proveedor con nombre y número en formato internacional (`573001234567`)
+- **Editar** nombre, número y estado activo/inactivo
+- **Eliminar** proveedor (con modal de confirmación)
 
-> El número de WhatsApp debe coincidir exactamente con el número desde el que la distribuidora envía mensajes, para que el sistema lo identifique automáticamente.
+> El número debe coincidir exactamente con el número desde el que la distribuidora envía mensajes. El sistema normaliza automáticamente entre formato completo (12 dígitos) y local (10 dígitos).
 
 ### Precios (`/prices`)
 
-Visualización y gestión de los precios recolectados:
+Visualización de los precios recolectados automáticamente:
 - Tabla con medicamento, proveedor, precio, unidad y fecha
 - Filtros por nombre de medicamento y por proveedor
-- Resaltado en verde del precio más bajo por medicamento (cuando hay 2+ proveedores)
-- Botón **Descargar Excel** para obtener el archivo generado desde la base de datos
-- Eliminar registros individuales (con modal de confirmación)
+- **Resaltado en verde** del precio más bajo por medicamento (solo cuando hay 2+ proveedores y los precios son distintos)
+- Botón **Descargar Excel** — genera y descarga el archivo `.xlsx` desde la base de datos
+- **Eliminar** registros individuales (con modal de confirmación)
 
-> Solo aparecen medicamentos que el administrador incluyó previamente en la hoja de Google Sheets. Los medicamentos que el proveedor envíe y no estén en las filas del día actual son ignorados automáticamente.
+> Solo aparecen medicamentos que el administrador incluyó previamente en la hoja de Google Sheets. Los medicamentos enviados por el proveedor que no existan en las filas del día actual son ignorados automáticamente por el backend.
 
 ### WhatsApp QR (`/whatsapp`)
 
 - Muestra el código QR generado por el servicio Node.js (`whatsapp-web.js`)
 - El administrador escanea el QR con el teléfono para vincular WhatsApp Web al sistema
-- El QR se actualiza automáticamente cuando la sesión expira
+- El QR se actualiza automáticamente cuando la sesión expira o caduca
+- Una vez vinculado, la sesión persiste entre reinicios del contenedor
 
 ### Configuración (`/settings`)
 
-Permite al cliente configurar sus propias credenciales de Google Sheets sin necesidad de editar archivos del servidor:
+Permite configurar las credenciales de Google Sheets sin editar archivos del servidor:
 
-- **Estado de conexión**: muestra si hay credenciales guardadas, el email de la cuenta de servicio y si la conexión con Google Sheets está activa. Botón de recarga manual.
-- **ID de la Google Sheet**: campo para ingresar el ID de la hoja (se obtiene de la URL de Google Sheets).
-- **Archivo de credenciales JSON**: zona de carga (drag-and-drop visual) para subir el archivo de cuenta de servicio de Google Cloud.
+- **Estado de conexión**: credenciales guardadas, email de la cuenta de servicio, estado online/offline. Botón de recarga manual.
+- **ID de la Google Sheet**: campo para ingresar el ID (se obtiene de la URL de Google Sheets: `https://docs.google.com/spreadsheets/d/{ID}/...`).
+- **Archivo de credenciales JSON**: zona drag-and-drop para subir el JSON de cuenta de servicio de Google Cloud.
 - **Guía integrada**: instrucciones paso a paso para crear las credenciales en Google Cloud Console.
-- **Botón "Guardar y probar conexión"**: guarda la configuración en el backend y verifica que la conexión sea exitosa. Muestra el resultado (éxito o error) inline.
+- **Botón "Guardar y probar conexión"**: guarda la configuración en el backend, prueba la conexión y muestra el resultado inline.
 
-> Las credenciales se guardan en el servidor de forma segura. Una vez configuradas, el campo de credenciales es opcional en futuras actualizaciones (solo el sheet ID si cambia).
+> Las credenciales se guardan en `data/app_config.json` en el servidor (volumen persistente). Una vez configuradas, el campo de credenciales es opcional en futuras actualizaciones (solo el sheet ID si cambia).
 
-## Funciones del cliente HTTP (`src/api/client.js`)
+## Cliente HTTP (`src/api/client.js`)
 
 | Función | Método | Ruta | Descripción |
 |---------|--------|------|-------------|
@@ -143,17 +160,17 @@ Permite al cliente configurar sus propias credenciales de Google Sheets sin nece
 | `updateProvider(id, data)` | PUT | `/providers/{id}` | Actualizar proveedor |
 | `deleteProvider(id)` | DELETE | `/providers/{id}` | Eliminar proveedor |
 | `getPrices(params)` | GET | `/prices` | Consultar precios con filtros opcionales |
-| `getPricesSummary()` | GET | `/prices/summary` | Obtener resumen estadístico |
-| `deletePrice(id)` | DELETE | `/prices/{id}` | Eliminar registro de precio |
-| `getExcelDownloadUrl()` | — | `/prices/export/excel` | URL directa de descarga del Excel |
-| `initMonthlySheet(force)` | POST | `/prices/init-month` | Crear hoja mensual en Sheets/Excel |
-| `initDaySheet()` | POST | `/prices/init-day` | Insertar encabezado de día actual |
-| `getConfigStatus()` | GET | `/config/status` | Estado de la conexión con Google Sheets |
+| `getPricesSummary()` | GET | `/prices/summary` | Resumen estadístico |
+| `deletePrice(id)` | DELETE | `/prices/{id}` | Eliminar precio |
+| `getExcelDownloadUrl()` | — | `/prices/export/excel` | URL de descarga del Excel |
+| `initMonthlySheet(force)` | POST | `/prices/init-month` | Crear pestaña vacía del mes |
+| `initDaySheet()` | POST | `/prices/init-day` | Inicializar estructura del día |
+| `getConfigStatus()` | GET | `/config/status` | Estado de conexión con Google Sheets |
 | `saveGoogleConfig(formData)` | POST | `/config/google` | Guardar sheet ID y/o credenciales JSON |
 
-## Configuración del backend
+## Configuración de proxy
 
-El frontend usa `baseURL: '/api'` en `src/api/client.js`. Vite redirige automáticamente todas las peticiones `/api/*` al backend en `http://localhost:8000` (eliminando el prefijo `/api`). El prefijo `/wa/*` se redirige al servicio WhatsApp en `http://localhost:3000`. Esto está definido en `vite.config.js`:
+En desarrollo, Vite redirige automáticamente las peticiones al backend y al servicio WhatsApp (`vite.config.js`):
 
 ```js
 proxy: {
@@ -170,4 +187,13 @@ proxy: {
 }
 ```
 
-En producción (Docker), nginx maneja el proxy en lugar de Vite. La configuración está en `nginx.conf`.
+En producción (Docker), nginx gestiona el proxy. La configuración está en `nginx.conf`.
+
+## Sidebar y branding
+
+El layout incluye un sidebar con:
+- Logo de la aplicación
+- Navegación con íconos: Dashboard, Proveedores, Precios, WhatsApp QR, Configuración
+- Pie de página con la firma de desarrollo:
+  - **neuroDIT** — From\[Data\]to{Disruption}
+  - Yonner Vargas Bernate — Desarrollador

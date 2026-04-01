@@ -11,7 +11,7 @@ async function fetchStatus() {
 }
 
 export default function WhatsAppQR() {
-  const [status, setStatus] = useState(null) // 'connected' | 'disconnected'
+  const [status, setStatus] = useState(null)
   const [qr, setQr] = useState(null)
   const [error, setError] = useState(null)
   const [lastUpdate, setLastUpdate] = useState(null)
@@ -24,7 +24,7 @@ export default function WhatsAppQR() {
       setLastUpdate(new Date())
       setError(null)
     } catch {
-      setError('No se puede conectar al servicio WhatsApp (puerto 3000). ¿Está corriendo?')
+      setError(true)
       setStatus(null)
     }
   }
@@ -38,83 +38,118 @@ export default function WhatsAppQR() {
   const isConnected = status === 'connected'
 
   return (
-    <div className="p-8 max-w-2xl mx-auto">
+    <div className="p-4 md:p-8 max-w-xl mx-auto">
+
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Vincular WhatsApp</h1>
-        <p className="text-gray-500 mt-1">
-          Escanea el código QR desde tu celular para conectar el dispositivo
+      <div className="mb-6">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900">Vincular WhatsApp</h1>
+        <p className="text-gray-500 mt-1 text-sm">
+          Escanea el código QR desde tu celular para activar el sistema
         </p>
       </div>
 
-      {/* Estado de conexión */}
-      <div className={`flex items-center gap-3 px-4 py-3 rounded-xl mb-6 text-sm font-medium ${
-        error
-          ? 'bg-red-50 text-red-700'
-          : isConnected
-            ? 'bg-green-50 text-green-700'
-            : 'bg-yellow-50 text-yellow-700'
-      }`}>
-        {error ? (
-          <WifiOff size={18} />
-        ) : isConnected ? (
-          <Wifi size={18} />
-        ) : (
-          <RefreshCw size={18} className="animate-spin" />
-        )}
-        <span>
-          {error
-            ? error
+      {/* Card principal */}
+      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+
+        {/* Estado */}
+        <div className={`flex items-center gap-3 px-5 py-4 border-b ${
+          error
+            ? 'bg-red-50 border-red-100'
             : isConnected
-              ? 'WhatsApp conectado correctamente'
-              : 'Esperando escaneo del código QR...'}
-        </span>
-      </div>
-
-      {/* QR o estado conectado */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-8 flex flex-col items-center">
-        {error ? (
-          <div className="text-center py-8">
-            <WifiOff size={48} className="text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 text-sm">Inicia el servicio con:</p>
-            <code className="bg-gray-100 text-gray-700 text-sm px-3 py-1.5 rounded-lg mt-2 inline-block">
-              npm start
-            </code>
-            <p className="text-gray-400 text-xs mt-1">en la carpeta WhatsAppService/</p>
+              ? 'bg-green-50 border-green-100'
+              : 'bg-amber-50 border-amber-100'
+        }`}>
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+            error ? 'bg-red-100' : isConnected ? 'bg-green-100' : 'bg-amber-100'
+          }`}>
+            {error
+              ? <WifiOff size={16} className="text-red-500" />
+              : isConnected
+                ? <Wifi size={16} className="text-green-600" />
+                : <RefreshCw size={16} className="text-amber-500 animate-spin" />
+            }
           </div>
-        ) : isConnected ? (
-          <div className="text-center py-8">
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Smartphone size={36} className="text-green-600" />
-            </div>
-            <p className="text-gray-900 font-semibold text-lg">Dispositivo vinculado</p>
-            <p className="text-gray-500 text-sm mt-1">
-              El servicio está recibiendo mensajes activamente
+          <div>
+            <p className={`text-sm font-semibold ${
+              error ? 'text-red-700' : isConnected ? 'text-green-700' : 'text-amber-700'
+            }`}>
+              {error
+                ? 'Servicio WhatsApp no disponible'
+                : isConnected
+                  ? 'WhatsApp conectado'
+                  : 'Esperando escaneo...'}
+            </p>
+            <p className={`text-xs ${
+              error ? 'text-red-500' : isConnected ? 'text-green-600' : 'text-amber-600'
+            }`}>
+              {error
+                ? 'El servicio no está corriendo en el puerto 3000'
+                : isConnected
+                  ? 'El sistema está recibiendo mensajes activamente'
+                  : 'Abre WhatsApp y escanea el código de abajo'}
             </p>
           </div>
-        ) : qr ? (
-          <>
-            <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
-              <QRCode value={qr} size={220} />
+        </div>
+
+        {/* Contenido */}
+        <div className="p-6 md:p-8 flex flex-col items-center">
+          {error ? (
+            <div className="text-center w-full py-4">
+              <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <WifiOff size={28} className="text-red-300" />
+              </div>
+              <p className="text-gray-700 font-semibold mb-1">Servicio no disponible</p>
+              <p className="text-gray-400 text-sm">
+                El sistema de WhatsApp no está activo en este momento.
+                <br />Contacta al administrador para activarlo.
+              </p>
+              <p className="text-gray-300 text-xs mt-4">
+                Reintentando en {POLL_INTERVAL / 1000}s...
+              </p>
             </div>
-            <p className="text-gray-500 text-sm mt-5 text-center">
-              Abre WhatsApp en tu celular →{' '}
-              <span className="font-medium text-gray-700">Dispositivos vinculados</span>{' '}
-              → Vincular dispositivo
-            </p>
-          </>
-        ) : (
-          <div className="text-center py-8">
-            <RefreshCw size={36} className="text-gray-300 mx-auto mb-3 animate-spin" />
-            <p className="text-gray-400 text-sm">Generando código QR...</p>
-          </div>
-        )}
+          ) : isConnected ? (
+            <div className="text-center py-4">
+              <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Smartphone size={40} className="text-green-600" />
+              </div>
+              <p className="text-gray-900 font-bold text-lg">Dispositivo vinculado</p>
+              <p className="text-gray-500 text-sm mt-1">
+                WhatsApp está activo y recibiendo mensajes
+              </p>
+            </div>
+          ) : qr ? (
+            <div className="text-center w-full">
+              <div className="inline-block p-4 bg-white border-2 border-gray-100 rounded-2xl shadow-sm mb-5">
+                <QRCode value={qr} size={200} />
+              </div>
+              <div className="bg-gray-50 rounded-xl p-4 text-left space-y-2">
+                <p className="text-xs font-semibold text-gray-700">Cómo escanear:</p>
+                <div className="flex items-start gap-2 text-xs text-gray-500">
+                  <span className="w-4 h-4 bg-green-100 text-green-700 rounded-full flex items-center justify-center shrink-0 font-bold text-[10px]">1</span>
+                  Abre WhatsApp en tu celular
+                </div>
+                <div className="flex items-start gap-2 text-xs text-gray-500">
+                  <span className="w-4 h-4 bg-green-100 text-green-700 rounded-full flex items-center justify-center shrink-0 font-bold text-[10px]">2</span>
+                  Ve a <strong className="text-gray-700 mx-1">Dispositivos vinculados</strong>
+                </div>
+                <div className="flex items-start gap-2 text-xs text-gray-500">
+                  <span className="w-4 h-4 bg-green-100 text-green-700 rounded-full flex items-center justify-center shrink-0 font-bold text-[10px]">3</span>
+                  Toca <strong className="text-gray-700 mx-1">Vincular dispositivo</strong> y escanea
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <RefreshCw size={32} className="text-gray-300 mx-auto mb-3 animate-spin" />
+              <p className="text-gray-400 text-sm">Generando código QR...</p>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Última actualización */}
       {lastUpdate && (
-        <p className="text-center text-xs text-gray-400 mt-4">
-          Actualizado {lastUpdate.toLocaleTimeString()} · se refresca cada {POLL_INTERVAL / 1000}s
+        <p className="text-center text-xs text-gray-400 mt-3">
+          Actualizado a las {lastUpdate.toLocaleTimeString()} · refresca cada {POLL_INTERVAL / 1000}s
         </p>
       )}
     </div>

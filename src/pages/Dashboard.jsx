@@ -44,20 +44,20 @@ export default function Dashboard() {
   const currentMonth = new Date().toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       {/* Header */}
-      <div className="flex items-start justify-between mb-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-6 md:mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-500 mt-1">
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-gray-500 mt-1 text-sm">
             Resumen del sistema de recolección de precios vía WhatsApp
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 shrink-0 flex-wrap">
           <button
             onClick={() => initDayMutation.mutate()}
             disabled={initDayMutation.isPending}
-            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 bg-green-600 text-white px-3 py-2 md:px-4 md:py-2.5 rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <CalendarDays size={16} />
             {initDayMutation.isPending ? 'Creando...' : 'Inicializar día'}
@@ -65,11 +65,16 @@ export default function Dashboard() {
           <button
             onClick={() => initMonthMutation.mutate(false)}
             disabled={initMonthMutation.isPending}
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 bg-blue-600 text-white px-3 py-2 md:px-4 md:py-2.5 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             title={`Crear hoja de ${currentMonth} en Google Sheets`}
           >
             <CalendarPlus size={16} />
-            {initMonthMutation.isPending ? 'Creando hoja...' : `Inicializar ${currentMonth}`}
+            <span className="hidden sm:inline">
+              {initMonthMutation.isPending ? 'Creando hoja...' : `Inicializar ${currentMonth}`}
+            </span>
+            <span className="sm:hidden">
+              {initMonthMutation.isPending ? 'Creando...' : 'Inicializar mes'}
+            </span>
           </button>
         </div>
       </div>
@@ -89,7 +94,7 @@ export default function Dashboard() {
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
         <StatCard
           title="Proveedores activos"
           value={loadingProviders ? '...' : activeProviders}
@@ -125,7 +130,7 @@ export default function Dashboard() {
       </div>
 
       {/* Proveedores registrados */}
-      <div className="bg-white rounded-2xl border border-gray-200 p-6">
+      <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-6">
         <h2 className="text-base font-semibold text-gray-900 mb-4">Proveedores registrados</h2>
         {loadingProviders ? (
           <p className="text-gray-400 text-sm">Cargando...</p>
@@ -139,12 +144,12 @@ export default function Dashboard() {
         ) : (
           <div className="divide-y divide-gray-100">
             {providers.map(p => (
-              <div key={p.id} className="flex items-center justify-between py-3">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{p.name}</p>
-                  <p className="text-xs text-gray-500">{p.phone_number}</p>
+              <div key={p.id} className="flex items-center justify-between py-3 gap-2">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">{p.name}</p>
+                  <p className="text-xs text-gray-500 truncate">{p.phone_number}</p>
                 </div>
-                <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                <span className={`shrink-0 text-xs px-2.5 py-1 rounded-full font-medium ${
                   p.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
                 }`}>
                   {p.is_active ? 'Activo' : 'Inactivo'}
